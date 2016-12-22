@@ -1,0 +1,23 @@
+{
+  "name": "mindful",
+  "version": "1.0.0",
+  "description": "A bot that tweets quotes from \"Mindfulness in Plain English\"",
+  "main": "index.js",
+  "dependencies": {
+    "nightmare": "^2.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vikasgorur/mindful.git"
+  },
+  "author": "Vikas Gorur",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vikasgorur/mindful/issues"
+  },
+  "homepage": "https://github.com/vikasgorur/mindful#readme"
+}
