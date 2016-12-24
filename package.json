@@ -4,6 +4,7 @@
   "description": "A bot that tweets quotes from \"Mindfulness in Plain English\"",
   "main": "index.js",
   "dependencies": {
+    "mustache": "^2.3.0",
     "nightmare": "^2.9.0"
   },
   "devDependencies": {},
