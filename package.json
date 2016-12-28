@@ -4,8 +4,10 @@
   "description": "A bot that tweets quotes from \"Mindfulness in Plain English\"",
   "main": "index.js",
   "dependencies": {
+    "bluebird": "^3.4.7",
     "mustache": "^2.3.0",
-    "nightmare": "^2.9.0"
+    "nightmare": "^2.9.0",
+    "twitter": "^1.7.0"
   },
   "devDependencies": {},
   "scripts": {
