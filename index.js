@@ -39,10 +39,21 @@ function imageForQuote(text) {
   });
 }
 
+let quotes;
+
+function loadQuotes() {
+  if (!quotes) {
+    let content = fs.readFileSync(path.join(__dirname, 'quotes.txt'), 'utf8');
+    quotes = content.split('\n--\n');
+  }
+}
+
 /**
  * Read the quotes.txt file and return a random quote from it.
  */
 function randomQuote() {
-  return 'hello world';
+  loadQuotes();
+  
+  let i = Math.floor(Math.random() * (quotes.length));
+  return quotes[i];
 }
-
