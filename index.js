@@ -157,8 +157,20 @@ function tweet(text) {
   });
 }
 
-initClient();
+if (process.argv.length != 3) {
+  console.error('usage: node index.js [save|tweet]');
+  process.exit(1);
+}
 
-let quote = randomQuote();
+if (process.argv[2] === 'save') {
+  let quote = randomQuote();
 
-tweet(quote);
+  imageForQuote(quote).then((image) => {
+    fs.writeFileSync('tweet.png', image);
+  });
+} else if (process.argv === 'tweet') {
+  initClient();
+  
+  let quote = randomQuote();
+  tweet(quote);
+} 
