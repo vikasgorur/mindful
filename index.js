@@ -1,9 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const Promise = require('bluebird');
+const log = require('simple-node-logger').createSimpleLogger();
 const Mustache = require('mustache');
 const Nightmare = require('nightmare');
+const Promise = require('bluebird');
+const sqlite3 = require('sqlite3').verbose();
 const Twitter = require('twitter');
 
 /**
@@ -45,6 +47,8 @@ function loadQuotes() {
   if (!quotes) {
     let content = fs.readFileSync(path.join(__dirname, 'quotes.txt'), 'utf8');
     quotes = content.split('\n--\n');
+
+    log.info(`Loaded ${quotes.length} quotes from quotes.txt`);
   }
 }
 
@@ -141,20 +145,109 @@ function finalizeUpload(mediaId) {
  * Tweet a quote.
  */
 function tweet(text) {
-  imageForQuote(text).then((image) => {
+  return imageForQuote(text).then((image) => {
     initUpload(Buffer.byteLength(image), 'image/png')
       .then(appendUpload(image))
       .then(finalizeUpload)
       .then(mediaId => {
         post('statuses/update', {
-          status: 'some text for ${mediaId}',
+          status: '',
           media_ids: mediaId
         })
         .then((tweet) => {
-          console.log(`Posted https://twitter.com/botmindful/status/${tweet.id_str}`);
+          log.info(`Posted https://twitter.com/botmindful/status/${tweet.id_str}`);
         })
       });
   });
+}
+
+/**
+ * Promises based interface to the SQLite DB.
+ */
+
+/**
+ * Run a query.
+ */
+function dbRun(query) {
+  return new Promise((resolve, reject) => {
+    let db = new sqlite3.Database('history.db', function(error) {
+      if (error) {
+        reject(error);
+      } else {
+        db.run(query, function(error) {
+          if (error) {
+            reject(error);
+          } else {
+            db.close();
+            resolve();
+          }
+        });
+      }
+    });
+  });
+}
+
+/**
+ * Run a query and return all result rows.
+ */
+function dbAll(query) {
+  return new Promise((resolve, reject) => {
+    let db = new sqlite3.Database('history.db', function(error) {
+      if (error) {
+        reject(error);
+      } else {
+        db.all(query, function(error, rows) {
+          if (error) {
+            reject(error);
+          } else {
+            db.close();
+            resolve(rows);
+          }
+        });
+      }
+    });
+  });
+}
+
+/**
+ * Store the tweet in the DB with a timestamp.
+ */
+function persistTweet(text) {
+  return dbRun(`INSERT INTO tweets VALUES ('${text}', datetime('now'));`);
+}
+
+/**
+ * Return true if the given text has been tweeted in the last 7 days.
+ */
+function recentlyTweeted(text) {
+  return dbAll(`SELECT text FROM tweets WHERE date > datetime('now', '-7 days');`).then((rows) => {
+    for (let row of rows) {
+      if (row['text'] === text) {
+        return true;
+      }
+    }
+
+    return false;
+  });
+}
+
+/**
+ * Return a tweet randomly that hasn't been tweeted recently.
+ */
+
+const MAX_ATTEMPTS = 100;
+
+function suitableQuote(attempt = 0) {
+  let quote = randomQuote();
+  
+  return recentlyTweeted(quote).then((yes) => {
+    if (yes && attempt < MAX_ATTEMPTS) {
+      return suitableQuote(attempt + 1);
+    } else {
+      log.info(`Selected quote: '${quote}'`);
+      return quote;
+    }
+  })
 }
 
 if (process.argv.length != 3) {
@@ -163,14 +256,20 @@ if (process.argv.length != 3) {
 }
 
 if (process.argv[2] === 'save') {
-  let quote = randomQuote();
-
-  imageForQuote(quote).then((image) => {
-    fs.writeFileSync('tweet.png', image);
+  suitableQuote().then((quote) => {
+    imageForQuote(quote).then((image) => {
+      fs.writeFileSync('tweet.png', image);
+    });
   });
-} else if (process.argv === 'tweet') {
+
+} else if (process.argv[2] === 'tweet') {
   initClient();
-  
-  let quote = randomQuote();
-  tweet(quote);
+
+  suitableQuote().then((quote) => {
+    imageForQuote(quote).then((image) => {
+      tweet(quote).then(() => {
+        persistTweet(quote);
+      });
+    });
+  });
 } 
