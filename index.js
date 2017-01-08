@@ -22,9 +22,9 @@ function quoteTemplate() {
 function urlForQuote(text) {
   let html = Mustache.render(quoteTemplate(), { text });
   let htmlPath = path.join(__dirname, 'quote.html');
-  
+
   fs.writeFileSync(htmlPath, html);
-  
+
   return `file://${htmlPath}`;
 }
 
@@ -57,7 +57,7 @@ function loadQuotes() {
  */
 function randomQuote() {
   loadQuotes();
-  
+
   let i = Math.floor(Math.random() * (quotes.length));
   return quotes[i];
 }
@@ -68,7 +68,7 @@ let client;
 function initClient() {
   if (!client) {
     const secrets = require('./secrets');
-    
+
     client = new Twitter({
       consumer_key: secrets.consumer_key,
       consumer_secret: secrets.consumer_secret,
@@ -239,7 +239,7 @@ const MAX_ATTEMPTS = 100;
 
 function suitableQuote(attempt = 0) {
   let quote = randomQuote();
-  
+
   return recentlyTweeted(quote).then((yes) => {
     if (yes && attempt < MAX_ATTEMPTS) {
       return suitableQuote(attempt + 1);
@@ -247,6 +247,8 @@ function suitableQuote(attempt = 0) {
       log.info(`Selected quote: '${quote}'`);
       return quote;
     }
+
+    log.info(`Maximum attempts exhausted.`);
   })
 }
 
@@ -256,10 +258,10 @@ if (process.argv.length != 3) {
 }
 
 if (process.argv[2] === 'save') {
-  suitableQuote().then((quote) => {
-    imageForQuote(quote).then((image) => {
-      fs.writeFileSync('tweet.png', image);
-    });
+  let quote = randomQuote();
+
+  imageForQuote(quote).then((image) => {
+    fs.writeFileSync('tweet.png', image);
   });
 
 } else if (process.argv[2] === 'tweet') {
@@ -272,4 +274,4 @@ if (process.argv[2] === 'save') {
       });
     });
   });
-} 
+}
