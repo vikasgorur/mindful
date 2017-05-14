@@ -171,7 +171,7 @@ function tweet(text) {
  */
 function dbRun(query) {
   return new Promise((resolve, reject) => {
-    let db = new sqlite3.Database('history.db', function(error) {
+    let db = new sqlite3.Database(path.join(__dirname, 'history.db'), function(error) {
       if (error) {
         reject(error);
       } else {
