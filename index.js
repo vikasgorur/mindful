@@ -3,8 +3,8 @@ const path = require('path');
 
 const log = require('simple-node-logger').createSimpleLogger();
 const Mustache = require('mustache');
-const Nightmare = require('nightmare');
 const Promise = require('bluebird');
+const Nightmare = require('nightmare');
 const sqlite3 = require('sqlite3').verbose();
 const Twitter = require('twitter');
 
@@ -37,6 +37,7 @@ function imageForQuote(text) {
   return nightmare
     .viewport(1280, 640)
     .goto(urlForQuote(text))
+    .wait(1000)
     .screenshot()
     .end();
 }
