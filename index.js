@@ -9,10 +9,17 @@ const sqlite3 = require('sqlite3').verbose();
 const Twitter = require('twitter');
 
 /**
+ * Return the absolute path for a file in the repo's root directory.
+ */
+function absPath(name) {
+  return path.join(__dirname, name);
+}
+
+/**
  * Return the quote template as a string.
  */
 function quoteTemplate() {
-  return fs.readFileSync(path.join(__dirname, 'quote.mustache'), 'utf8');
+  return fs.readFileSync(absPath('quote.mustache'), 'utf8');
 }
 
 /**
@@ -21,7 +28,7 @@ function quoteTemplate() {
  */
 function urlForQuote(text) {
   let html = Mustache.render(quoteTemplate(), { text });
-  let htmlPath = path.join(__dirname, 'quote.html');
+  let htmlPath = absPath('quote.html');
 
   fs.writeFileSync(htmlPath, html);
 
@@ -46,7 +53,7 @@ let quotes;
 
 function loadQuotes() {
   if (!quotes) {
-    let content = fs.readFileSync(path.join(__dirname, 'quotes.txt'), 'utf8');
+    let content = fs.readFileSync(absPath('quotes.txt'), 'utf8');
     quotes = content.split('\n--\n');
 
     log.info(`Loaded ${quotes.length} quotes from quotes.txt`);
@@ -68,7 +75,7 @@ let client;
 
 function initClient() {
   if (!client) {
-    const secrets = require('./secrets');
+    const secrets = require(absPath('secrets'));
 
     client = new Twitter({
       consumer_key: secrets.consumer_key,
@@ -171,7 +178,7 @@ function tweet(text) {
  */
 function dbRun(query) {
   return new Promise((resolve, reject) => {
-    let db = new sqlite3.Database(path.join(__dirname, 'history.db'), function(error) {
+    let db = new sqlite3.Database(absPath('history.db'), function(error) {
       if (error) {
         reject(error);
       } else {
@@ -193,7 +200,7 @@ function dbRun(query) {
  */
 function dbAll(query) {
   return new Promise((resolve, reject) => {
-    let db = new sqlite3.Database('history.db', function(error) {
+    let db = new sqlite3.Database(absPath('history.db'), function(error) {
       if (error) {
         reject(error);
       } else {
@@ -262,7 +269,7 @@ if (process.argv[2] === 'save') {
   let quote = randomQuote();
 
   imageForQuote(quote).then((image) => {
-    fs.writeFileSync('tweet.png', image);
+    fs.writeFileSync(absPath('tweet.png'), image);
   });
 
 } else if (process.argv[2] === 'tweet') {
